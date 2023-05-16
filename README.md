@@ -1,1 +1,1 @@
-# spring-boot-postgresql-cdc-api
+# spring-boot-cdc-api
