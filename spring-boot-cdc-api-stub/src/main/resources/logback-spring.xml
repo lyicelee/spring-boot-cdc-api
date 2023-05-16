@@ -1,0 +1,122 @@
+<configuration scan="false" scanPeriod="60 seconds" debug="false">
+    <!-- ログのルートディレクトリを定義する -->
+    <property name="LOG_HOME" value="/logs/postgresql-cdc-api" />
+    <!-- ログファイル名を定義 -->
+    <property name="appName" value="postgresql-cdc-api"></property>
+    <!-- ログ出力のフォーマットを定義 -->
+    <property name="LogLayoutFormat" value="%d{yyyy-MM-dd HH:mm:ss.SSS}[ %thread ]-[ %-5level ][ %logger{50} : %line ] - %msg%n"/>
+
+    <!-- ch.qos.logback.core.ConsoleAppender コンソール出力を表示する -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${LogLayoutFormat}</pattern>
+        </layout>
+    </appender>
+
+    <!-- ログファイルをスクロールして、先にログを指定ファイルに記録して、ある条件に該当する時、ログを新しいファイルに記録します。 -->
+    <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${appName}-debug.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${appName}-debug-%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>15MB</maxFileSize>
+        </triggeringPolicy>
+        <!-- ログ出力フォーマット： -->
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${LogLayoutFormat}</pattern>
+        </layout>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>debug</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- ログファイルをスクロールして、先にログを指定ファイルに記録して、ある条件に該当する時、ログを新しいファイルに記録します。 -->
+    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${appName}-info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${appName}-info-%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>15MB</maxFileSize>
+        </triggeringPolicy>
+        <!-- ログ出力フォーマット： -->
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${LogLayoutFormat}</pattern>
+        </layout>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>info</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- ログファイルをスクロールして、先にログを指定ファイルに記録して、ある条件に該当する時、ログを新しいファイルに記録します。 -->
+    <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${appName}-warn.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${appName}-warn-%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>15MB</maxFileSize>
+        </triggeringPolicy>
+        <!-- ログ出力フォーマット： -->
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${LogLayoutFormat}</pattern>
+        </layout>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>warn</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- ログファイルをスクロールして、先にログを指定ファイルに記録して、ある条件に該当する時、ログを新しいファイルに記録します。 -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${appName}-error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${appName}-error-%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>20</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>15MB</maxFileSize>
+        </triggeringPolicy>
+        <!-- ログ出力フォーマット： -->
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${LogLayoutFormat}</pattern>
+        </layout>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>error</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <springProfile name="dev,ut">
+        <logger name="com.orizonsh" level="debug"/>
+        <root level="info">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="DEBUG_FILE" />
+            <appender-ref ref="INFO_FILE" />
+            <appender-ref ref="WARN_FILE" />
+            <appender-ref ref="ERROR_FILE" />
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="info">
+            <appender-ref ref="INFO_FILE" />
+            <appender-ref ref="WARN_FILE" />
+            <appender-ref ref="ERROR_FILE" />
+        </root>
+    </springProfile>
+</configuration>

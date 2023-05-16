@@ -1,7 +1,11 @@
 package com.orizonsh.cdc.api.engine;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -11,16 +15,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.orizonsh.cdc.api.bean.common.DebeziumSourceDataBean;
-import com.orizonsh.cdc.api.bean.table.CategoryDataBean;
-import com.orizonsh.cdc.api.bean.table.OrdersDataBean;
-import com.orizonsh.cdc.api.bean.table.ProductDataBean;
-import com.orizonsh.cdc.api.bean.table.TableDataBeanBase;
+import com.orizonsh.cdc.api.bean.common.DebeziumSourceData;
+import com.orizonsh.cdc.api.bean.request.HttpConnectionRequestData;
+import com.orizonsh.cdc.api.bean.table.CategoryData;
+import com.orizonsh.cdc.api.bean.table.OrdersData;
+import com.orizonsh.cdc.api.bean.table.ProductData;
+import com.orizonsh.cdc.api.bean.table.TableDataBase;
 import com.orizonsh.cdc.api.engine.config.PgsqlEngineConfig;
 import com.orizonsh.cdc.api.engine.debezium.DebeziumEngineUtils;
 import com.orizonsh.cdc.api.exception.CDCApiException;
 import com.orizonsh.cdc.api.utils.ApplicationContextUtils;
+import com.orizonsh.cdc.api.utils.HttpConnectionUtils;
 
 import io.debezium.data.Envelope;
 import io.debezium.embedded.Connect;
@@ -37,14 +44,19 @@ public class CDCEngine {
 	/** Debezium Engine */
 	private DebeziumEngine<RecordChangeEvent<SourceRecord>> engine = null;
 
+	/** Executor Service */
+	private ExecutorService executor = null;
+
 	@Autowired
 	private ApplicationContextUtils contextUtils;
 
 	@Value("${cdc-engine-config.db.type}")
 	private String dbType;
 
-	public void initEngine() throws CDCApiException  {
+	/** データ通知先URL */
+	private HashSet<String> notifyURLSet = new HashSet<String>();
 
+	public void initEngine() throws CDCApiException  {
 		if (null == engine) {
 			log.info("CDC Engineを初期化します。");
 			this.engine = DebeziumEngine
@@ -54,6 +66,43 @@ public class CDCEngine {
 					.build();
 		} else {
 			log.warn("CDC Engineが既に初期化しました。");
+		}
+	}
+
+	/**
+	 * データ通知先URLを追加
+	 *
+	 * @param notifyURL
+	 */
+	public void addNotifyURL(String notifyURL) {
+		notifyURLSet.add(notifyURL);
+	}
+
+	public void start() throws CDCApiException {
+
+		log.info("CDC Engineを起動します。");
+
+		if (null == engine) {
+			this.initEngine();
+		}
+
+		executor = Executors.newSingleThreadExecutor();
+		executor.execute(engine);
+
+		log.info("CDC Engineが起動できました。");
+	}
+
+	public void stop() throws CDCApiException {
+		try {
+			if (null != engine) {
+				log.info("CDC Engineを停止します。");
+				engine.close();
+				executor.shutdown();
+				engine = null;
+				log.info("CDC Engineが停止できました。");
+			}
+		} catch (Exception e) {
+			throw new CDCApiException(e.getMessage(), e);
 		}
 	}
 
@@ -97,7 +146,7 @@ public class CDCEngine {
 					continue;
 				}
 
-				DebeziumSourceDataBean sourceData = DebeziumEngineUtils.getSourceDataFromRecord(sourceRecordChangeValue);
+				DebeziumSourceData sourceData = DebeziumEngineUtils.getSourceDataFromRecord(sourceRecordChangeValue);
 				if (null == sourceData) {
 					continue;
 				}
@@ -107,23 +156,23 @@ public class CDCEngine {
 						Envelope.Operation.UPDATE == sourceData.getOperationType() ||
 						Envelope.Operation.DELETE == sourceData.getOperationType()) {
 
-					TableDataBeanBase beforeData = null;
-					TableDataBeanBase afterData = null;
+					TableDataBase beforeData = null;
+					TableDataBase afterData = null;
 
 					switch (sourceData.getTableName()) {
 					case "orders": {
-						beforeData = DebeziumEngineUtils.getBeforeDataFromRecord(sourceRecordChangeValue, OrdersDataBean.class);
-						afterData = DebeziumEngineUtils.getAfterDataFromRecord(sourceRecordChangeValue, OrdersDataBean.class);
+						beforeData = DebeziumEngineUtils.getBeforeDataFromRecord(sourceRecordChangeValue, OrdersData.class);
+						afterData = DebeziumEngineUtils.getAfterDataFromRecord(sourceRecordChangeValue, OrdersData.class);
 						break;
 					}
 					case "category": {
-						beforeData = DebeziumEngineUtils.getBeforeDataFromRecord(sourceRecordChangeValue, CategoryDataBean.class);
-						afterData = DebeziumEngineUtils.getAfterDataFromRecord(sourceRecordChangeValue, CategoryDataBean.class);
+						beforeData = DebeziumEngineUtils.getBeforeDataFromRecord(sourceRecordChangeValue, CategoryData.class);
+						afterData = DebeziumEngineUtils.getAfterDataFromRecord(sourceRecordChangeValue, CategoryData.class);
 						break;
 					}
 					case "product": {
-						beforeData = DebeziumEngineUtils.getBeforeDataFromRecord(sourceRecordChangeValue, ProductDataBean.class);
-						afterData = DebeziumEngineUtils.getAfterDataFromRecord(sourceRecordChangeValue, ProductDataBean.class);
+						beforeData = DebeziumEngineUtils.getBeforeDataFromRecord(sourceRecordChangeValue, ProductData.class);
+						afterData = DebeziumEngineUtils.getAfterDataFromRecord(sourceRecordChangeValue, ProductData.class);
 						break;
 					}
 					default:
@@ -141,6 +190,8 @@ public class CDCEngine {
 					} else {
 						log.warn("変更後のデータがありません。");
 					}
+
+					sendData(sourceData.getTableName(), sourceData.getOperationType(), beforeData, afterData);
 				}
 
 				recordCommitter.markProcessed(r);
@@ -155,5 +206,31 @@ public class CDCEngine {
 		}
 
 		log.info("handlePayload END");
+	}
+
+	private void sendData(String tableName, Envelope.Operation operation, TableDataBase beforeData, TableDataBase afterData) throws Exception {
+
+
+		HttpConnectionRequestData requestData = new HttpConnectionRequestData();
+
+		// リクエスト情報を設定
+		requestData.setMethodType("PUT");
+		requestData.setContentType("application/json; charset=UTF-8");
+		requestData.setConnectTimeout(5000);
+		requestData.setReadTimeout(5000);
+
+		HashMap<String, Object> requestBodyMap = new HashMap<String, Object>();
+		requestBodyMap.put("tableName",  tableName);
+		requestBodyMap.put("operation",  operation);
+		requestBodyMap.put("beforeData", beforeData);
+		requestBodyMap.put("afterData",  afterData);
+
+		// リクエストボディ
+		requestData.setReqBody(new ObjectMapper().writeValueAsString(requestBodyMap));
+
+		for (String notifyURL : notifyURLSet) {
+			requestData.setUrl(notifyURL);
+			HttpConnectionUtils.send(requestData);
+		}
 	}
 }

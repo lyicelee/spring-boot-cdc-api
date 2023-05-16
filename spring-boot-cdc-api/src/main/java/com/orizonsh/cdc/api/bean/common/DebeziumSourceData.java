@@ -13,7 +13,7 @@ import lombok.Data;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DebeziumSourceDataBean {
+public class DebeziumSourceData {
 
 	/** Debeziumバージョン */
 	@JsonProperty(value = "version")

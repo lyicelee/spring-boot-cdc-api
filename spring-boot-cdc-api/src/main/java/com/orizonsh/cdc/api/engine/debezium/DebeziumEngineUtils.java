@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import io.debezium.data.Envelope;
-import com.orizonsh.cdc.api.bean.common.DebeziumSourceDataBean;
+import com.orizonsh.cdc.api.bean.common.DebeziumSourceData;
 
 /**
  * Debeziumのツールクラス
@@ -34,13 +34,13 @@ public final class DebeziumEngineUtils {
 
 	private static final String FIELD_NAME_OPERATION = "op";
 
-	public static DebeziumSourceDataBean getSourceDataFromRecord(Struct record) throws Exception {
+	public static DebeziumSourceData getSourceDataFromRecord(Struct record) throws Exception {
 
 		Struct dateStruct = (Struct) record.get(FIELD_NAME_SOURCE);
 		// 操作情報データがなければ
 		if (null == dateStruct) return null;
 
-		DebeziumSourceDataBean sourceData = convertStructToObject(dateStruct, DebeziumSourceDataBean.class);
+		DebeziumSourceData sourceData = convertStructToObject(dateStruct, DebeziumSourceData.class);
 
 		// 操作タイプを取得
 		sourceData.setOperationType(Envelope.Operation.forCode((String) record.get(FIELD_NAME_OPERATION)));

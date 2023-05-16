@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class OrdersDataBean extends TableDataBeanBase {
+public class OrdersData extends TableDataBase {
 
 	/** ID */
 	@JsonProperty(value = "id")

@@ -5,14 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public final class CategoryDataBean extends TableDataBeanBase {
+public class ProductData extends TableDataBase {
 
 	/** ID */
 	@JsonProperty(value = "id")
 	private Long id;
 
-	/** カテゴリ名 */
-	@JsonProperty(value = "category_name")
-	private String categoryName;
-
+	/** 商品名 */
+	@JsonProperty(value = "product_name")
+	private String productName;
 }
