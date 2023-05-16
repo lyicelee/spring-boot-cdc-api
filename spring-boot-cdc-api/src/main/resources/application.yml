@@ -1,0 +1,4 @@
+spring:
+  # 環境dev|ut|prod
+  profiles:
+    active: dev
