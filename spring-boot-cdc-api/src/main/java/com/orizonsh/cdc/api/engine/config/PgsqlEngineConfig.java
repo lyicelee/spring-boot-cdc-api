@@ -7,26 +7,32 @@ import org.springframework.stereotype.Component;
 
 import com.orizonsh.cdc.api.exception.CDCApiException;
 
-@Component("PgsqlEngineConfig")
+@Component
 public final class PgsqlEngineConfig extends BaseEngineConfig {
 
-	@Value("${cdc-engine-config.database.server.name}")
+	private static final long serialVersionUID = 2121930554641157595L;
+
+	@Value("${pgsql-db-config.server.name}")
 	private String dbServerName;
 
-	@Value("${cdc-engine-config.database.hostname}")
+	@Value("${pgsql-db-config.hostname}")
 	private String dbHostname;
 
-	@Value("${cdc-engine-config.database.port}")
+	@Value("${pgsql-db-config.port}")
 	private String dbPort;
 
-	@Value("${cdc-engine-config.database.dbname}")
+	@Value("${pgsql-db-config.dbname}")
 	private String dbname;
 
-	@Value("${cdc-engine-config.database.user}")
+	@Value("${pgsql-db-config.user}")
 	private String dbUser;
 
-	@Value("${cdc-engine-config.database.password}")
+	@Value("${pgsql-db-config.password}")
 	private String dbPassword;
+
+	/** 監視対象となるテーブルのリスト */
+	@Value("${pgsql-db-config.table.include.list}")
+	private String tableIncludeList;
 
 	/**
 	 * CDC エンジンの設定情報を取得する。
@@ -46,6 +52,10 @@ public final class PgsqlEngineConfig extends BaseEngineConfig {
 			props.setProperty("database.dbname", dbname);
 			props.setProperty("database.user", dbUser);
 			props.setProperty("database.password", dbPassword);
+
+			props.setProperty("decimal.handling.mode", "double");
+
+			props.setProperty("table.include.list", tableIncludeList);
 
 			logEngineConfigValue(props);
 

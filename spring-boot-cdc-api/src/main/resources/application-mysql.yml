@@ -9,11 +9,11 @@ cdc-engine-config:
     
   database:
       server.name: pgsql-server
-      hostname: 192.168.1.201
+      hostname: 192.168.1.204
       port: 5432
-      user: demo
-      password: demo
-      dbname: demo_db
+      dbname: cdc_api_db
+      user: cdc_api_user
+      password: cdc_api_pass
       
   topic.prefix: cdc-api-connector
   

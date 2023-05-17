@@ -59,8 +59,6 @@ public final class HttpConnectionUtils {
 			// リクエストエンティティ作成
 			MediaType type = MediaType.parseMediaType(param.getContentType());
 
-			String authorization = null;
-
 			RequestEntity<String> requestEntity = RequestEntity
 					.method(HttpMethod.valueOf(param.getMethodType()), new URI(param.getUrl()))
 					.contentType(type)

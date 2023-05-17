@@ -1,4 +1,4 @@
 spring:
-  # 環境dev|ut|prod
+  # 環境:pgsql|mysql
   profiles:
-    active: dev
+    active: pgsql

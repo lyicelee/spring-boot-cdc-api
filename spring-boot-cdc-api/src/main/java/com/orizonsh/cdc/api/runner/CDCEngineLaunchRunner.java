@@ -1,16 +1,15 @@
-package com.orizonsh.cdc.api.service.impl;
+package com.orizonsh.cdc.api.runner;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 import com.orizonsh.cdc.api.engine.CDCEngine;
-import com.orizonsh.cdc.api.exception.CDCApiException;
-import com.orizonsh.cdc.api.service.CDCApiService;
 
 @Service
-public class CDCApiServiceImpl implements CDCApiService {
+public class CDCEngineLaunchRunner implements CommandLineRunner {
 
 	/** Log API */
 	private final Logger log = LogManager.getLogger(this.getClass());
@@ -19,11 +18,13 @@ public class CDCApiServiceImpl implements CDCApiService {
 	private CDCEngine engine;
 
 	@Override
-	public void setNotifyUrl(String notifyURL) throws CDCApiException {
+	public void run(String... args) throws Exception {
 
-		engine.stop();
-		engine.addNotifyURL(notifyURL);
+		log.info("CDC Engine 起動!!!");
+
 		engine.start();
+
+		log.info("CDC Engine 起動済!!!");
 	}
 
 }

@@ -101,19 +101,11 @@
         </filter>
     </appender>
 
-    <springProfile name="dev,ut">
+    <springProfile name="pgsql,mysql">
         <logger name="com.orizonsh" level="debug"/>
         <root level="info">
             <appender-ref ref="CONSOLE" />
             <appender-ref ref="DEBUG_FILE" />
-            <appender-ref ref="INFO_FILE" />
-            <appender-ref ref="WARN_FILE" />
-            <appender-ref ref="ERROR_FILE" />
-        </root>
-    </springProfile>
-
-    <springProfile name="prod">
-        <root level="info">
             <appender-ref ref="INFO_FILE" />
             <appender-ref ref="WARN_FILE" />
             <appender-ref ref="ERROR_FILE" />

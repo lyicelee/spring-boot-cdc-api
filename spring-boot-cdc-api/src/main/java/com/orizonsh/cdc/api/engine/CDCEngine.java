@@ -69,15 +69,6 @@ public class CDCEngine {
 		}
 	}
 
-	/**
-	 * データ通知先URLを追加
-	 *
-	 * @param notifyURL
-	 */
-	public void addNotifyURL(String notifyURL) {
-		notifyURLSet.add(notifyURL);
-	}
-
 	public void start() throws CDCApiException {
 
 		log.info("CDC Engineを起動します。");
@@ -90,6 +81,15 @@ public class CDCEngine {
 		executor.execute(engine);
 
 		log.info("CDC Engineが起動できました。");
+	}
+
+	/**
+	 * データ通知先URLを追加
+	 *
+	 * @param notifyURL
+	 */
+	public void addNotifyURL(String notifyURL) {
+		notifyURLSet.add(notifyURL);
 	}
 
 	public void stop() throws CDCApiException {
@@ -194,12 +194,12 @@ public class CDCEngine {
 					sendData(sourceData.getTableName(), sourceData.getOperationType(), beforeData, afterData);
 				}
 
-				recordCommitter.markProcessed(r);
+//				recordCommitter.markProcessed(r);
 
 				log.info("----------------------------------------------------------------------------------");
 			}
 
-			recordCommitter.markBatchFinished();
+//			recordCommitter.markBatchFinished();
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -230,7 +230,7 @@ public class CDCEngine {
 
 		for (String notifyURL : notifyURLSet) {
 			requestData.setUrl(notifyURL);
-			HttpConnectionUtils.send(requestData);
+//			HttpConnectionUtils.send(requestData);
 		}
 	}
 }

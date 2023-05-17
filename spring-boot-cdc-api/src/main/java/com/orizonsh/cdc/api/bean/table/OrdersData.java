@@ -3,9 +3,13 @@ package com.orizonsh.cdc.api.bean.table;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class OrdersData extends TableDataBase {
+
+	private static final long serialVersionUID = -7624323117380178798L;
 
 	/** ID */
 	@JsonProperty(value = "id")
