@@ -1,5 +1,6 @@
 package com.orizonsh.cdc.api.engine.config;
 
+import java.util.Optional;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -7,12 +8,12 @@ import org.springframework.stereotype.Component;
 
 import com.orizonsh.cdc.api.exception.CDCApiException;
 
-import io.debezium.connector.postgresql.PostgresConnector;
+import io.debezium.connector.oracle.OracleConnector;
 
 @Component
-public final class PgsqlEngineConfig extends AbstractEngineConfig {
+public class OracleEngineConfig extends AbstractEngineConfig {
 
-	private static final long serialVersionUID = 2121930554641157595L;
+	private static final long serialVersionUID = -8597000815977519575L;
 
 	@Value("${db-config.server.name}")
 	private String dbServerName;
@@ -42,13 +43,14 @@ public final class PgsqlEngineConfig extends AbstractEngineConfig {
 	 * @return CDC エンジンの設定情報
 	 * @throws CDCApiException
 	 */
+	@Override
 	public Properties getProps() throws CDCApiException {
 
 		try {
 			// 設定情報を初期化する
-			final Properties props = initProps(PostgresConnector.class);
+			final Properties props = initProps(OracleConnector.class);
 
-			props.setProperty("snapshot.mode", "never");
+			props.setProperty("snapshot.mode", "schema_only");
 
 			props.setProperty("database.server.name", dbServerName);
 			props.setProperty("database.hostname", dbHostname);
@@ -57,9 +59,9 @@ public final class PgsqlEngineConfig extends AbstractEngineConfig {
 			props.setProperty("database.user", dbUser);
 			props.setProperty("database.password", dbPassword);
 
-			props.setProperty("decimal.handling.mode", "double");
-
 			props.setProperty("table.include.list", tableIncludeList);
+
+			props.setProperty("decimal.handling.mode", "double");
 
 			logEngineConfigValue(props);
 
@@ -68,4 +70,5 @@ public final class PgsqlEngineConfig extends AbstractEngineConfig {
 			throw new CDCApiException(e.getMessage(), e);
 		}
 	}
+
 }

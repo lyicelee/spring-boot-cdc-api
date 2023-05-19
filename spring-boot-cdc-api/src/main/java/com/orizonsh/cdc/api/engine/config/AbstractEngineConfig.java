@@ -5,23 +5,22 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.orizonsh.cdc.api.exception.CDCApiException;
 
 import io.debezium.config.Configuration;
-import io.debezium.connector.postgresql.PostgresConnector;
+import io.debezium.connector.common.RelationalBaseSourceConnector;
 
 /**
  * CDC エンジン Configのベースクラス
  */
-@Component
-public abstract class BaseEngineConfig implements Serializable {
+public abstract class AbstractEngineConfig implements Serializable {
 
 	private static final long serialVersionUID = 8617742754241543904L;
 
@@ -40,8 +39,8 @@ public abstract class BaseEngineConfig implements Serializable {
 	@Value("${cdc-engine-config.offset.storage}")
 	private String offsetStorage;
 
-//	@Value("${cdc-engine-config.offset.storage.file.filename}")
-//	private String offsetStorageFileName;
+	@Value("${cdc-engine-config.offset.storage.file.filename}")
+	private String offsetStorageFileName;
 
 	@Value("${cdc-engine-config.offset.flush.interval.ms}")
 	private Long offsetFlushInterval;
@@ -49,11 +48,11 @@ public abstract class BaseEngineConfig implements Serializable {
 	@Value("${cdc-engine-config.offset.flush.timeout.ms}")
 	private Long offsetFlushTimeout;
 
-//	@Value("${cdc-engine-config.schema.history.internal}")
-//	private String schemaHistoryInternal;
-//
-//	@Value("${cdc-engine-config.schema.history.internal.file.filename}")
-//	private String schemaHistoryInternalFileName;
+	@Value("${db-config.schema.history.internal:}")
+	private String schemaHistoryInternal;
+
+	@Value("${db-config.schema.history.internal.file.filename:}")
+	private String schemaHistoryInternalFileName;
 
 	/**
 	 * CDC エンジンの設定情報を取得する。
@@ -62,21 +61,37 @@ public abstract class BaseEngineConfig implements Serializable {
 	 * @throws CDCApiException
 	 */
 	public Properties getProps() throws CDCApiException {
+		//
+		throw new NotImplementedException("getProps()をオーバーライドしてください。");
+	}
+
+	/**
+	 * CDC エンジンの設定情報を初期化する。
+	 *
+	 * @param <T>
+	 * @param connectorClass connectorクラス
+	 * @return CDC エンジンの設定情報
+	 * @throws CDCApiException
+	 */
+	final <T extends RelationalBaseSourceConnector> Properties initProps(Class<T> connectorClass) throws CDCApiException {
 
 		final Properties props = Configuration.create().build().asProperties();
 
 		props.setProperty("name", engineName);
 		props.setProperty("slot.name", slotName);
 
-		props.setProperty("connector.class", PostgresConnector.class.getName());
+		props.setProperty("connector.class", connectorClass.getName());
 
 		props.setProperty("converter", "org.apache.kafka.connect.json.JsonConverter");
 		props.setProperty("converter.schemas.enable", "false");
 
 		props.setProperty("offset.storage", offsetStorage);
-//		props.setProperty("offset.storage.file.filename", offsetStorageFileName);
+		props.setProperty("offset.storage.file.filename", offsetStorageFileName);
 		props.setProperty("offset.flush.interval.ms", offsetFlushInterval.toString());
 		props.setProperty("offset.flush.timeout.ms", offsetFlushTimeout.toString());
+
+		props.setProperty("schema.history.internal", schemaHistoryInternal);
+		props.setProperty("schema.history.internal.file.filename", schemaHistoryInternalFileName);
 
 		props.setProperty("include.schema.changes", "false");
 
@@ -84,12 +99,7 @@ public abstract class BaseEngineConfig implements Serializable {
 
 		props.setProperty("tasks.max", "1");
 
-		props.setProperty("snapshot.mode", "never");
-
 		props.setProperty("topic.prefix", topicPrefix);
-
-//		props.setProperty("schema.history.internal", schemaHistoryInternal);
-//		props.setProperty("schema.history.internal.file.filename", schemaHistoryInternalFileName);
 
 		return props;
 	}

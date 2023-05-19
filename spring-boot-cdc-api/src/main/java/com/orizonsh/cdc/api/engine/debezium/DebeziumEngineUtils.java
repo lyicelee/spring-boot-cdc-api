@@ -40,12 +40,32 @@ public final class DebeziumEngineUtils {
 		// 操作情報データがなければ
 		if (null == dateStruct) return null;
 
+		log.info("source：[]", convertStructToJSONString(dateStruct));
+
 		DebeziumSourceData sourceData = convertStructToObject(dateStruct, DebeziumSourceData.class);
 
 		// 操作タイプを取得
 		sourceData.setOperationType(Envelope.Operation.forCode((String) record.get(FIELD_NAME_OPERATION)));
 
 		return sourceData;
+	}
+
+	public static String getBeforeDataWithJsonString(Struct record) throws Exception {
+
+		Struct dateStruct = (Struct) record.get(FIELD_NAME_BEFORE);
+		// 変更前のデータがなければ
+		if (null == dateStruct) return null;
+
+		return convertStructToJSONString(dateStruct);
+	}
+
+	public static String getAfterDataWithJsonString(Struct record) throws Exception {
+
+		Struct dateStruct = (Struct) record.get(FIELD_NAME_AFTER);
+		// 変更後のデータがなければ
+		if (null == dateStruct) return null;
+
+		return convertStructToJSONString(dateStruct);
 	}
 
 	public static <T> T getBeforeDataFromRecord(Struct record, Class<T> targetClass) throws Exception {
@@ -66,7 +86,7 @@ public final class DebeziumEngineUtils {
 		return convertStructToObject(dateStruct, targetClass);
 	}
 
-	private static <T> T convertStructToObject(Struct structData, Class<T> targetClass) throws Exception {
+	private static String convertStructToJSONString(Struct structData) throws Exception {
 
 		Map<String, Object> dataMap = structData.schema().fields()
 			.stream()
@@ -77,10 +97,18 @@ public final class DebeziumEngineUtils {
 
 		try {
 			JsonMapper mapper = new JsonMapper();
-//			log.info(">>>{}<<<", mapper.writeValueAsString(dataMap));
+			return mapper.writeValueAsString(dataMap);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			throw new Exception(e.getMessage());
+		}
+	}
 
-			T targetData = targetClass.cast(mapper.convertValue(dataMap, mapper.getTypeFactory().constructType(targetClass)));
+	private static <T> T convertStructToObject(Struct structData, Class<T> targetClass) throws Exception {
 
+		try {
+			JsonMapper mapper = new JsonMapper();
+			T targetData = targetClass.cast(mapper.convertValue(convertStructToJSONString(structData), mapper.getTypeFactory().constructType(targetClass)));
 			return targetData;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);

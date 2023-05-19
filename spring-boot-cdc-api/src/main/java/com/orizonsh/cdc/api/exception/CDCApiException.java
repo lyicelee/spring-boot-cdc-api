@@ -14,11 +14,11 @@ public final class CDCApiException extends Exception {
 	private static final long serialVersionUID = 826197122304263725L;
 
     public CDCApiException(String message) {
-        super(String.format("[CDC-API]$s", message));
+        super(String.format("[CDC-API]%s", message));
     }
 
     public CDCApiException(String message, Throwable cause) {
-        super(String.format("[CDC-API]$s", message), cause);
+        super(String.format("[CDC-API]%s", message), cause);
     }
 
     public CDCApiException(Throwable cause) {
