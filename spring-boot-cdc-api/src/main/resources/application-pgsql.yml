@@ -7,6 +7,8 @@ cdc-engine-config:
   db.type: pgsql
   engine.name: pgsql-cdc-engine
   slot.name: pgsql_cdc_engine_slot
+  
+  tasks.max: 1
       
   topic.prefix: cdc-api-connector
   
@@ -15,15 +17,19 @@ cdc-engine-config:
     storage.file.filename: /tmp/cdc-api/pgsql/offset.dat
     flush.interval.ms: 0
     flush.timeout.ms: 5000
+    
+  schema.history:
+    internal: io.debezium.storage.file.history.FileSchemaHistory
+    internal.file.filename: /tmp/cdc-api/pgsql/history.dat
+
+  snapshot.mode: never #initial|initial_only|always|never|exported|custom
 
 db-config:
-  server.name: pgsql-server
+  server:
+    name: mysql-server
   hostname: 192.168.1.204
   port: 5432
   dbname: cdc_api_db
   user: cdc_api_user
   password: cdc_api_pass
   table.include.list: cdc_api_user.orders,cdc_api_user.category,cdc_api_user.product
-  schema.history:
-    internal: io.debezium.storage.file.history.FileSchemaHistory
-    internal.file.filename: /tmp/cdc-api/pgsql/history.dat

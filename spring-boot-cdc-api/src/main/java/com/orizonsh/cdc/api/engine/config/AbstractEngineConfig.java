@@ -9,10 +9,12 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCApiCoreException;
+import com.orizonsh.cdc.api.exception.CDCEngineException;
 
 import io.debezium.config.Configuration;
 import io.debezium.connector.common.RelationalBaseSourceConnector;
@@ -27,40 +29,17 @@ public abstract class AbstractEngineConfig implements Serializable {
 	/** Log API */
 	final Logger log = LogManager.getLogger(this.getClass());
 
-	@Value("${cdc-engine-config.engine.name}")
-	private String engineName;
-
-	@Value("${cdc-engine-config.slot.name}")
-	private String slotName;
-
-	@Value("${cdc-engine-config.topic.prefix}")
-	private String topicPrefix;
-
-	@Value("${cdc-engine-config.offset.storage}")
-	private String offsetStorage;
-
-	@Value("${cdc-engine-config.offset.storage.file.filename}")
-	private String offsetStorageFileName;
-
-	@Value("${cdc-engine-config.offset.flush.interval.ms}")
-	private Long offsetFlushInterval;
-
-	@Value("${cdc-engine-config.offset.flush.timeout.ms}")
-	private Long offsetFlushTimeout;
-
-	@Value("${db-config.schema.history.internal:}")
-	private String schemaHistoryInternal;
-
-	@Value("${db-config.schema.history.internal.file.filename:}")
-	private String schemaHistoryInternalFileName;
+	/** 環境設定 */
+	@Autowired
+	private Environment environment;
 
 	/**
 	 * CDC エンジンの設定情報を取得する。
 	 *
 	 * @return CDC エンジンの設定情報
-	 * @throws CDCApiException
+	 * @throws CDCApiCoreException
 	 */
-	public Properties getProps() throws CDCApiException {
+	public Properties getProps() throws CDCEngineException {
 		//
 		throw new NotImplementedException("getProps()をオーバーライドしてください。");
 	}
@@ -71,37 +50,43 @@ public abstract class AbstractEngineConfig implements Serializable {
 	 * @param <T>
 	 * @param connectorClass connectorクラス
 	 * @return CDC エンジンの設定情報
-	 * @throws CDCApiException
+	 * @throws CDCApiCoreException
 	 */
-	final <T extends RelationalBaseSourceConnector> Properties initProps(Class<T> connectorClass) throws CDCApiException {
+	final <T extends RelationalBaseSourceConnector> Properties initProps(Class<T> connectorClass) throws CDCEngineException {
 
 		final Properties props = Configuration.create().build().asProperties();
 
-		props.setProperty("name", engineName);
-		props.setProperty("slot.name", slotName);
-
 		props.setProperty("connector.class", connectorClass.getName());
+
+		props.setProperty("name", getEnvProperty("cdc-engine-config.engine.name"));
+		props.setProperty("slot.name", getEnvProperty("cdc-engine-config.slot.name"));
 
 		props.setProperty("converter", "org.apache.kafka.connect.json.JsonConverter");
 		props.setProperty("converter.schemas.enable", "false");
 
-		props.setProperty("offset.storage", offsetStorage);
-		props.setProperty("offset.storage.file.filename", offsetStorageFileName);
-		props.setProperty("offset.flush.interval.ms", offsetFlushInterval.toString());
-		props.setProperty("offset.flush.timeout.ms", offsetFlushTimeout.toString());
+		props.setProperty("offset.storage", getEnvProperty("cdc-engine-config.offset.storage"));
+		props.setProperty("offset.storage.file.filename", getEnvProperty("cdc-engine-config..file.filename"));
+		props.setProperty("offset.flush.interval.ms", getEnvProperty("cdc-engine-config.flush.offset.interval.ms"));
+		props.setProperty("offset.flush.timeout.ms", getEnvProperty("cdc-engine-config.offset.flush.timeout.ms"));
 
-		props.setProperty("schema.history.internal", schemaHistoryInternal);
-		props.setProperty("schema.history.internal.file.filename", schemaHistoryInternalFileName);
+		props.setProperty("schema.history.internal", getEnvProperty("cdc-engine-config.schema.history.internal"));
+		props.setProperty("schema.history.internal.file.filename", getEnvProperty("cdc-engine-config.schema.history.internal.file.filename"));
 
-		props.setProperty("include.schema.changes", "false");
+		props.setProperty("tasks.max", getEnvProperty("cdc-engine-config.tasks.max"));
 
-		props.setProperty("plugin.name", "decoderbufs");
+		props.setProperty("topic.prefix", getEnvProperty("cdc-engine-config.topic.prefix"));
 
-		props.setProperty("tasks.max", "1");
-
-		props.setProperty("topic.prefix", topicPrefix);
+		props.setProperty("snapshot.mode", getEnvProperty("cdc-engine-config.snapshot.mode"));
 
 		return props;
+	}
+
+	final String getEnvProperty(String key) throws CDCEngineException {
+		try {
+			return getEnvProperty(key);
+		} catch (Exception e) {
+			throw new CDCEngineException(String.format("設定情報から[%s]データが取得できません。", key));
+		}
 	}
 
 	/**
@@ -109,12 +94,9 @@ public abstract class AbstractEngineConfig implements Serializable {
 	 */
 	final void logEngineConfigValue(Properties props) {
 		try {
-			Map<String, Object> configMap = props.stringPropertyNames()
-					.stream()
-					.map(key -> {
-						return Pair.of(key, props.getProperty(key));
-					})
-					.collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+			Map<String, Object> configMap = props.stringPropertyNames().stream().map(key -> {
+				return Pair.of(key, props.getProperty(key));
+			}).collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
 			log.debug("cdc engine config:[{}]", new JsonMapper().writeValueAsString(configMap));
 

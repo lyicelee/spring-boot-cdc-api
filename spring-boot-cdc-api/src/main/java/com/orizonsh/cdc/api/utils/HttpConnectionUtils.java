@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orizonsh.cdc.api.bean.request.HttpConnectionRequestData;
 import com.orizonsh.cdc.api.bean.response.HttpConnectionResponseData;
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCApiCoreException;
 
 /**
  * API送信用ユーティリティクラス.
@@ -78,7 +78,7 @@ public final class HttpConnectionUtils {
 		} catch (Exception e) {
 
 			log.error("APIリクエスト実行が失敗しました。", e);
-			throw new CDCApiException("APIリクエスト実行が失敗しました。");
+			throw new CDCApiCoreException("APIリクエスト実行が失敗しました。");
 
 		}
 	}

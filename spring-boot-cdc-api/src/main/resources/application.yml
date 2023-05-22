@@ -1,4 +1,4 @@
 spring:
   # 環境:pgsql|mysql|oracle
   profiles:
-    active: oracle
+    active: pgsql

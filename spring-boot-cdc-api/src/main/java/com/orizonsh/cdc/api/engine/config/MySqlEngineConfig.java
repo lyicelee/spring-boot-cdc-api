@@ -2,17 +2,22 @@ package com.orizonsh.cdc.api.engine.config;
 
 import java.util.Properties;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.orizonsh.cdc.api.exception.CDCApiCoreException;
 import com.orizonsh.cdc.api.exception.CDCEngineException;
 
-import io.debezium.connector.postgresql.PostgresConnector;
+import io.debezium.connector.mysql.MySqlConnector;
 
 @Component
-public final class PgsqlEngineConfig extends AbstractEngineConfig {
+public class MySqlEngineConfig extends AbstractEngineConfig {
 
-	private static final long serialVersionUID = 2121930554641157595L;
+	private static final long serialVersionUID = 4365194962801871653L;
+
+	/** 監視対象となるテーブルのリスト */
+	@Value("${db-config.table.include.list}")
+	private String tableIncludeList;
 
 	/**
 	 * CDC エンジンの設定情報を取得する。
@@ -20,13 +25,14 @@ public final class PgsqlEngineConfig extends AbstractEngineConfig {
 	 * @return CDC エンジンの設定情報
 	 * @throws CDCApiCoreException
 	 */
+	@Override
 	public Properties getProps() throws CDCEngineException {
 
 		try {
 			// 設定情報を初期化する
-			final Properties props = initProps(PostgresConnector.class);
+			final Properties props = initProps(MySqlConnector.class);
 
-			props.setProperty("database.server.name", getEnvProperty("db-config.server.name"));
+			props.setProperty("database.server.id", getEnvProperty("db-config.server.id"));
 
 			props.setProperty("database.hostname", getEnvProperty("db-config.hostname"));
 			props.setProperty("database.port", getEnvProperty("db-config.port"));
@@ -34,11 +40,11 @@ public final class PgsqlEngineConfig extends AbstractEngineConfig {
 			props.setProperty("database.user", getEnvProperty("db-config.user"));
 			props.setProperty("database.password", getEnvProperty("db-config.password"));
 
-			props.setProperty("table.include.list", getEnvProperty("db-config.table.include.list"));
+			props.setProperty("database.allowPublicKeyRetrieval", "true");
 
-			props.setProperty("plugin.name", "decoderbufs");
+			props.setProperty("database.include.list", "cdc_api_db");
 
-			props.setProperty("include.schema.changes", "false");
+			props.setProperty("table.include.list", "cdc_api_db.orders");
 
 			props.setProperty("decimal.handling.mode", "double");
 

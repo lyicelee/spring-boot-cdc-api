@@ -2,7 +2,8 @@ package com.orizonsh.cdc.api.engine;
 
 import org.springframework.stereotype.Component;
 
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCApiCoreException;
+import com.orizonsh.cdc.api.exception.CDCEngineException;
 
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
@@ -13,9 +14,10 @@ public final class JSONCDCEngine extends AbstractCDCEngine<ChangeEvent<String, S
 
 	/**
 	 * CDCエンジンを作成する。
-	 * @throws CDCApiException
+	 * @throws CDCApiCoreException
+	 * @throws CDCEngineException
 	 */
-	void createEngine() throws CDCApiException {
+	void createEngine() throws CDCEngineException {
 		this.engine = DebeziumEngine.create(Json.class)
 				.using(getEngineConfig())
 				.using(getConnectorCallback())

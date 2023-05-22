@@ -12,10 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 
 import com.orizonsh.cdc.api.engine.callback.CDCEngineCompletionCallback;
 import com.orizonsh.cdc.api.engine.callback.CDCEngineConnectorCallback;
+import com.orizonsh.cdc.api.engine.config.MySqlEngineConfig;
 import com.orizonsh.cdc.api.engine.config.OracleEngineConfig;
 import com.orizonsh.cdc.api.engine.config.PgsqlEngineConfig;
 import com.orizonsh.cdc.api.engine.constant.CDCEngineConstant;
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCApiCoreException;
+import com.orizonsh.cdc.api.exception.CDCEngineException;
 import com.orizonsh.cdc.api.utils.ApplicationContextUtils;
 import com.orizonsh.cdc.api.utils.FileUtils;
 
@@ -49,7 +51,7 @@ public abstract class AbstractCDCEngine<T> {
 	 *
 	 * @throws CDCApiException
 	 */
-	public final void start() throws CDCApiException {
+	public final void start() throws CDCEngineException {
 
 		if (null == engine) {
 
@@ -75,7 +77,7 @@ public abstract class AbstractCDCEngine<T> {
 	 *
 	 * @throws CDCApiException
 	 */
-	public final void stop() throws CDCApiException {
+	public final void stop() throws CDCEngineException {
 
 		try {
 			if (null != engine) {
@@ -88,7 +90,7 @@ public abstract class AbstractCDCEngine<T> {
 				log.info("CDC Engineが停止できました。");
 			}
 		} catch (Exception e) {
-			throw new CDCApiException(e.getMessage(), e);
+			throw new CDCEngineException(e.getMessage(), e);
 		}
 	}
 
@@ -96,7 +98,7 @@ public abstract class AbstractCDCEngine<T> {
 	 * CDCエンジンを作成する。
 	 * @throws CDCApiException
 	 */
-	void createEngine() throws CDCApiException {
+	void createEngine() throws CDCEngineException {
 		// createEngine()を実装してください。
 		throw new NotImplementedException("createEngine()を実装してください。");
 	}
@@ -105,27 +107,33 @@ public abstract class AbstractCDCEngine<T> {
 	 * CDCエンジンの設定情報を取得する。
 	 *
 	 * @return CDCエンジンの設定情報
+	 * @throws CDCApiCoreException
 	 *
 	 * @throws CDCApiException
 	 */
-	final Properties getEngineConfig() throws CDCApiException {
+	final Properties getEngineConfig() throws CDCEngineException {
 
-		if (null == engineConfigProps) {
-
-			log.debug("[cdc-engine]DB type>>>>>{}", dbType);
-			switch(dbType) {
-				case CDCEngineConstant.DB_TYPE_PGSQL:
-					return contextUtils.getBean(PgsqlEngineConfig.class).getProps();
-
-				case CDCEngineConstant.DB_TYPE_ORACLE:
-					return contextUtils.getBean(OracleEngineConfig.class).getProps();
-
-				default:
-					throw new CDCApiException("対象外DB種類：" + dbType);
+		try {
+			if (null == engineConfigProps) {
+				log.debug("[cdc-engine]DB type>>>>>{}", dbType);
+				switch(dbType) {
+					case CDCEngineConstant.DB_TYPE_PGSQL:
+						engineConfigProps = contextUtils.getBean(PgsqlEngineConfig.class).getProps();
+						break;
+					case CDCEngineConstant.DB_TYPE_ORACLE:
+						engineConfigProps = contextUtils.getBean(OracleEngineConfig.class).getProps();
+						break;
+					case CDCEngineConstant.DB_TYPE_MYSQL:
+						engineConfigProps = contextUtils.getBean(MySqlEngineConfig.class).getProps();
+						break;
+					default:
+						throw new CDCEngineException("対象外DB種類：" + dbType);
+				}
 			}
+			return engineConfigProps;
+		} catch (CDCApiCoreException e) {
+			throw new CDCEngineException(e);
 		}
-
-		return engineConfigProps;
 	}
 
 	final CDCEngineConnectorCallback getConnectorCallback() {
@@ -138,19 +146,19 @@ public abstract class AbstractCDCEngine<T> {
 		return completCallback;
 	}
 
-	private void createOffsetStorageFile() throws CDCApiException {
+	private void createOffsetStorageFile() throws CDCEngineException {
 		try {
 			FileUtils.createFile(getEngineConfig().getProperty("offset.storage.file.filename"));
 		} catch (Exception e) {
-			throw new CDCApiException("ファイルの作成が失敗しました。", e);
+			throw new CDCEngineException("ファイルの作成が失敗しました。", e);
 		}
 	}
 
-	private void createSchemaHistoryFile() throws CDCApiException {
+	private void createSchemaHistoryFile() throws CDCEngineException {
 		try {
 			FileUtils.createFile(getEngineConfig().getProperty("schema.history.internal.file.filename"));
 		} catch (Exception e) {
-			throw new CDCApiException("ファイルの作成が失敗しました。", e);
+			throw new CDCEngineException("ファイルの作成が失敗しました。", e);
 		}
 	}
 }

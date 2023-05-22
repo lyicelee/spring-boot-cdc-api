@@ -4,25 +4,32 @@ server:
     context-path: /cdc-api
 
 cdc-engine-config:
-  db.type: pgsql
-  engine.name: pgsql-cdc-engine
-    
-  database:
-      server.name: pgsql-server
-      hostname: 192.168.1.204
-      port: 5432
-      dbname: cdc_api_db
-      user: cdc_api_user
-      password: cdc_api_pass
+  db.type: mysql
+  engine.name: mysql-cdc-engine
+  slot.name: mysql_cdc_engine_slot
+  
+  tasks.max: 1
       
   topic.prefix: cdc-api-connector
   
   offset:
-    storage: org.apache.kafka.connect.storage.FileOffsetBackingStore
-    storage.file.filename: /tmp/cdc-api/offset.dat
+    storage: org.apache.kafka.connect.storage.MemoryOffsetBackingStore
+    storage.file.filename: /tmp/cdc-api/mysql/offset.dat
     flush.interval.ms: 0
     flush.timeout.ms: 5000
-  
+    
   schema.history:
     internal: io.debezium.storage.file.history.FileSchemaHistory
-    internal.file.filename: /tmp/cdc-api/schemahistory.dat
+    internal.file.filename: /tmp/cdc-api/mysql/history.dat
+
+  snapshot.mode: schema_only #initial|initial_only|when_needed|never|schema_only|schema_only_recovery
+
+db-config:
+  server:
+    id: 1000
+  hostname: 192.168.1.206
+  port: 3306
+  dbname: cdc_api_db
+  user: cdc_api_user
+  password: Cdc_api_pass123
+  table.include.list: cdc_api_db.category,cdc_api_db.product,cdc_api_db.orders

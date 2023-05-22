@@ -8,12 +8,8 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.orizonsh.cdc.api.bean.common.DebeziumSourceData;
-import com.orizonsh.cdc.api.bean.table.CategoryData;
-import com.orizonsh.cdc.api.bean.table.OrdersData;
-import com.orizonsh.cdc.api.bean.table.ProductData;
-import com.orizonsh.cdc.api.bean.table.TableDataBase;
 import com.orizonsh.cdc.api.engine.debezium.DebeziumEngineUtils;
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCEngineException;
 
 import io.debezium.data.Envelope;
 import io.debezium.embedded.Connect;
@@ -26,9 +22,9 @@ public final class SourceRecordCDCEngine extends AbstractCDCEngine<RecordChangeE
 
 	/**
 	 * CDCエンジンを作成する。
-	 * @throws CDCApiException
+	 * @throws CDCEngineException
 	 */
-	void createEngine() throws CDCApiException {
+	void createEngine() throws CDCEngineException {
 		this.engine = DebeziumEngine.create(ChangeEventFormat.of(Connect.class))
 				.using(getEngineConfig())
 				.using(getConnectorCallback())

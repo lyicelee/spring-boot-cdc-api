@@ -11,4 +11,7 @@ public final class CDCEngineConstant {
 	/** DB種類：Oracle */
 	public static final String DB_TYPE_ORACLE = "oracle";
 
+	/** DB種類：MySQL */
+	public static final String DB_TYPE_MYSQL = "mysql";
+
 }

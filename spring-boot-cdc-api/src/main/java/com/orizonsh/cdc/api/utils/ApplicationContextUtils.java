@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCApiCoreException;
 
 @Component
 public final class ApplicationContextUtils implements ApplicationContextAware {
@@ -18,11 +18,11 @@ public final class ApplicationContextUtils implements ApplicationContextAware {
 		this.applicationContext = applicationContext;
 	}
 
-	public <T> T getBean(Class<T> targetClass) throws CDCApiException {
+	public <T> T getBean(Class<T> targetClass) throws CDCApiCoreException {
 		try {
 			return targetClass.cast(applicationContext.getBean(Class.forName(targetClass.getName())));
 		} catch (Exception e) {
-			throw new CDCApiException(e.getMessage(), e);
+			throw new CDCApiCoreException(e.getMessage(), e);
 		}
 	}
 }

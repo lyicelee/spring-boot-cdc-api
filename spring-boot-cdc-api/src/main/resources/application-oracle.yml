@@ -7,6 +7,8 @@ cdc-engine-config:
   db.type: oracle
   engine.name: oracle-cdc-engine
   slot.name: oracle_cdc_engine_slot
+  
+  tasks.max: 1
       
   topic.prefix: cdc-api-connector
   
@@ -15,15 +17,19 @@ cdc-engine-config:
     storage.file.filename: /tmp/cdc-api/oracle/offset.dat
     flush.interval.ms: 0
     flush.timeout.ms: 5000
+    
+  schema.history:
+    internal: io.debezium.storage.file.history.FileSchemaHistory
+    internal.file.filename: /tmp/cdc-api/oracle/history.dat
+
+  snapshot.mode: schema_only #initial|initial_only|always|schema_only|schema_only_recovery
 
 db-config:
-  server.name: oracle-server
+  server:
+    name: oracle-server
   hostname: 192.168.1.204
   port: 1521
   dbname: CDCAPIDB
   user: cdc_api_user
   password: cdc_api_pass
   table.include.list: CDC_API_USER.PRODUCT,CDC_API_USER.CATEGORY
-  schema.history:
-    internal: io.debezium.storage.file.history.FileSchemaHistory
-    internal.file.filename: /tmp/cdc-api/oracle/history.dat

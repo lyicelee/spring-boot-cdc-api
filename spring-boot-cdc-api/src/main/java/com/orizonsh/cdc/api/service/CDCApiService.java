@@ -1,6 +1,6 @@
 package com.orizonsh.cdc.api.service;
 
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCApiCoreException;
 
 public interface CDCApiService {
 
@@ -8,8 +8,8 @@ public interface CDCApiService {
 	 * データ通知先設定
 	 *
 	 * @param notifyURL データ通知先URL
-	 * @throws CDCApiException
+	 * @throws CDCApiCoreException
 	 */
-	void setNotifyUrl(String notifyURL) throws CDCApiException;
+	void setNotifyUrl(String notifyURL) throws CDCApiCoreException;
 
 }

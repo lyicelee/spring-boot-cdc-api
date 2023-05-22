@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.orizonsh.cdc.api.engine.JSONCDCEngine;
-import com.orizonsh.cdc.api.exception.CDCApiException;
+import com.orizonsh.cdc.api.exception.CDCApiCoreException;
 import com.orizonsh.cdc.api.service.CDCApiService;
 
 @Service
@@ -19,7 +19,7 @@ public class CDCApiServiceImpl implements CDCApiService {
 	private JSONCDCEngine engine;
 
 	@Override
-	public void setNotifyUrl(String notifyURL) throws CDCApiException {
+	public void setNotifyUrl(String notifyURL) throws CDCApiCoreException {
 
 //		engine.stop();
 //		engine.addNotifyURL(notifyURL);

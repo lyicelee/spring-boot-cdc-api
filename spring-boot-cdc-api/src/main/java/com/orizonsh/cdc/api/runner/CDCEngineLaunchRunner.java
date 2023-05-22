@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
-import com.orizonsh.cdc.api.engine.SourceRecordCDCEngine;
+import com.orizonsh.cdc.api.engine.JSONCDCEngine;
 
 @Service
 public class CDCEngineLaunchRunner implements CommandLineRunner {
@@ -15,7 +15,7 @@ public class CDCEngineLaunchRunner implements CommandLineRunner {
 	private final Logger log = LogManager.getLogger(this.getClass());
 
 	@Autowired
-	private SourceRecordCDCEngine engine;
+	private JSONCDCEngine engine;
 
 	@Override
 	public void run(String... args) throws Exception {
